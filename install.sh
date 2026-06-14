@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/YOUR_USER/remnawave-subbridge.git}"
+REPO_URL="${REPO_URL:-https://github.com/nnvpnteam/remnawave-subbridge.git}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/remnawave-subbridge}"
 
 echo "==> Клонирование в $INSTALL_DIR"

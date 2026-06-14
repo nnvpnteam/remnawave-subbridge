@@ -15,7 +15,7 @@
 ## Быстрая установка (1 команда)
 
 ```bash
-git clone https://github.com/YOUR_USER/remnawave-subbridge.git ~/remnawave-subbridge
+git clone https://github.com/nnvpnteam/remnawave-subbridge.git ~/remnawave-subbridge
 cd ~/remnawave-subbridge
 cp .env.example .env && nano .env
 docker compose up -d --build
@@ -25,7 +25,7 @@ curl -s http://127.0.0.1:8080/healthz
 Или через скрипт:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USER/remnawave-subbridge/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/nnvpnteam/remnawave-subbridge/main/install.sh | bash
 ```
 
 ## Переменные `.env`
