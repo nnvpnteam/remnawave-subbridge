@@ -1,0 +1,8 @@
+services:
+  subbridge:
+    build: .
+    image: remnawave-subbridge:latest
+    container_name: subbridge
+    restart: always
+    env_file: .env
+    network_mode: host
