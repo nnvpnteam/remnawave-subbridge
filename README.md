@@ -36,6 +36,7 @@ JWT_SECRET=...                    # SELECT secret_key FROM jwt;
 SUBSCRIPTION_PATH=sub
 REMNAWAVE_URL=https://panel.example.com
 REMNAWAVE_TOKEN=eyJ...
+REMNAWAVE_SUB_PAGE_URL=https://link.nnnvpn.com
 
 # Мигратор
 MARZBAN_DATABASE_URL=mysql+pymysql://marzban:pass@127.0.0.1:3306/marzban
@@ -60,6 +61,12 @@ proxy_pass http://127.0.0.1:8080;
 ```
 
 Откат — вернуть `proxy_pass http://127.0.0.1:5000;` (Marzban).
+
+### Страница подписки в браузере
+
+Marzban в браузере показывал HTML-страницу. Мост проксирует VPN-клиентам конфиги через API,
+а запросы из браузера (`Accept: text/html`) перенаправляет на `REMNAWAVE_SUB_PAGE_URL/{shortUuid}`
+(например `https://link.nnnvpn.com/dLA8o7PegfsBBb-F`).
 
 ## Миграция пользователей
 

@@ -12,6 +12,7 @@ from typing import Optional
 
 import requests
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 
 try:
     from dotenv import load_dotenv
@@ -25,6 +26,13 @@ RW_URL = os.environ["REMNAWAVE_URL"].rstrip("/")
 RW_TOKEN = os.environ["REMNAWAVE_TOKEN"]
 SUB_PATH = os.getenv("SUBSCRIPTION_PATH", "sub").strip("/")
 CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))
+# Публичная страница подписки для браузера, напр. https://link.nnnvpn.com
+SUB_PAGE_URL = os.getenv("REMNAWAVE_SUB_PAGE_URL", "").rstrip("/")
+
+VPN_UA_HINTS = (
+    "v2ray", "clash", "sing-box", "mihomo", "hiddify", "stash",
+    "outline", "happ", "karing", "sfa", "sfi", "sfm", "sft", "shadowsocks",
+)
 
 JWT_PREFIX = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
 
@@ -61,6 +69,15 @@ def username_from_token(token: str) -> Optional[str]:
     if u_signature != resign:
         return None
     return decoded_str.split(",")[0]
+
+
+def is_browser_request(request: Request) -> bool:
+    """Браузер запрашивает text/html; VPN-клиенты — нет."""
+    accept = (request.headers.get("accept") or "").lower()
+    if "text/html" not in accept:
+        return False
+    ua = (request.headers.get("user-agent") or "").lower()
+    return not any(hint in ua for hint in VPN_UA_HINTS)
 
 
 def short_uuid_for(username: str) -> Optional[str]:
@@ -134,6 +151,9 @@ def resolve(token: str, request: Request, suffix: str = "") -> Response:
     short = short_uuid_for(username)
     if not short:
         raise HTTPException(status_code=404, detail="Not Found")
+    # В браузере — редирект на страницу подписки Remnawave (link.nnnvpn.com)
+    if suffix == "" and is_browser_request(request) and SUB_PAGE_URL:
+        return RedirectResponse(url=f"{SUB_PAGE_URL}/{short}", status_code=302)
     return proxy_to_remnawave(short, suffix, request)
 
 
