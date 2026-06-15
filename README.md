@@ -41,7 +41,15 @@ REMNAWAVE_TOKEN=eyJ...
 MARZBAN_DATABASE_URL=mysql+pymysql://marzban:pass@127.0.0.1:3306/marzban
 REMNAWAVE_SQUAD_UUID=...
 TRAFFIC_LIMIT_STRATEGY=MONTH
+TAG_PAID=PAID
+TAG_FREE=FREE
 ```
+
+### telegramId и теги
+
+- **telegramId** — парсится из username формата `{tgid}-{4буквы}`, например `7816960148-port` → `7816960148`.
+- **tag** — `PAID` если `is_trial=0`, `FREE` если `is_trial=1` (группы платников/бесплатников в Marzban).
+- Имена тегов настраиваются через `TAG_PAID` / `TAG_FREE` в `.env`.
 
 ## nginx (cutover)
 

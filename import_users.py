@@ -7,6 +7,8 @@
   сохраняя vlessUuid / trojanPassword / ssPassword -> бесшовность по UUID.
 - Идемпотентно: upsert по username (есть -> PATCH, нет -> POST).
 - Поддерживает --dry-run, --limit N, --username NAME (PoC на одном юзере).
+- Из username вида `7816960148-port` извлекает telegramId.
+- Тег PAID/FREE по полю is_trial (платники / бесплатники).
 
 Осознанные ограничения:
 - used_traffic через API задать нельзя -> юзеры стартуют с 0 использованного.
@@ -18,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass, field
@@ -53,6 +56,11 @@ STATUS_MAP = {
 
 NO_EXPIRE_DATE = os.getenv("NO_EXPIRE_DATE", "2099-01-01T00:00:00.000Z")
 TRAFFIC_LIMIT_STRATEGY = os.getenv("TRAFFIC_LIMIT_STRATEGY", "MONTH")
+TAG_PAID = os.getenv("TAG_PAID", "PAID")
+TAG_FREE = os.getenv("TAG_FREE", "FREE")
+
+# username вида 7816960148-port (tgid + дефис + 4 буквы)
+USERNAME_TG_RE = re.compile(r"^(\d+)-[a-zA-Z]{4}$")
 
 
 def env(name: str, default: Optional[str] = None, required: bool = False) -> Optional[str]:
@@ -192,6 +200,17 @@ def expire_to_iso(expire_unix: Optional[int]) -> str:
     return to_iso(datetime.fromtimestamp(expire_unix, tz=timezone.utc))
 
 
+def telegram_id_from_username(username: str) -> Optional[int]:
+    m = USERNAME_TG_RE.match(username)
+    if not m:
+        return None
+    return int(m.group(1))
+
+
+def tag_for_user(is_trial: bool) -> str:
+    return TAG_FREE if is_trial else TAG_PAID
+
+
 def build_payload(u: SourceUser, squad_uuid: Optional[str]) -> Dict[str, Any]:
     payload: Dict[str, Any] = {
         "username": u.username,
@@ -214,6 +233,12 @@ def build_payload(u: SourceUser, squad_uuid: Optional[str]) -> Dict[str, Any]:
         payload["createdAt"] = to_iso(u.created_at)
     if squad_uuid:
         payload["activeInternalSquads"] = [squad_uuid]
+
+    tg_id = telegram_id_from_username(u.username)
+    if tg_id is not None:
+        payload["telegramId"] = tg_id
+    payload["tag"] = tag_for_user(u.is_trial)
+
     return payload
 
 
@@ -225,6 +250,8 @@ UPDATE_FIELDS = {
     "description",
     "hwidDeviceLimit",
     "activeInternalSquads",
+    "telegramId",
+    "tag",
 }
 
 
@@ -325,6 +352,8 @@ def run(args) -> int:
                 creds.append("ss=***")
             print(
                 f"  {u.username:<24} status={p['status']:<8} "
+                f"tag={p.get('tag', '-'):<5} "
+                f"tg={p.get('telegramId', '-'):<12} "
                 f"limit={p['trafficLimitBytes']:<14} expire={p['expireAt']} "
                 f"[{', '.join(creds) or 'no-proxy'}]"
             )
