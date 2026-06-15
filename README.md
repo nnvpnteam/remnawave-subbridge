@@ -63,6 +63,9 @@ proxy_pass http://127.0.0.1:8080;
 
 ## Миграция пользователей
 
+После `git pull` пересборка **не обязательна** — скрипты монтируются с хоста.
+Достаточно `git pull` и повторного запуска импорта.
+
 ```bash
 # сухой прогон
 docker compose run --rm subbridge python import_users.py --dry-run
@@ -72,6 +75,12 @@ docker compose run --rm subbridge python import_users.py --username testuser --v
 
 # полный импорт
 docker compose run --rm subbridge python import_users.py
+```
+
+Проверка, что контейнер видит свежий скрипт:
+
+```bash
+docker compose run --rm subbridge grep TAG_PAID import_users.py
 ```
 
 ## Порядок миграции

@@ -6,3 +6,6 @@ services:
     restart: always
     env_file: .env
     network_mode: host
+    volumes:
+      - ./bridge.py:/app/bridge.py:ro
+      - ./import_users.py:/app/import_users.py:ro
