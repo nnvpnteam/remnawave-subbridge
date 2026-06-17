@@ -36,6 +36,7 @@ JWT_SECRET=...                    # SELECT secret_key FROM jwt;
 SUBSCRIPTION_PATH=sub
 REMNAWAVE_URL=https://panel.example.com
 REMNAWAVE_TOKEN=eyJ...
+REMNAWAVE_API_KEY=...              # X-Api-Key из Caddy Auth Portal, если нужен
 REMNAWAVE_SUB_PAGE_URL=https://link.nnnvpn.com
 
 # Мигратор

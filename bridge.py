@@ -24,6 +24,7 @@ except ImportError:
 SECRET = os.environ["JWT_SECRET"]
 RW_URL = os.environ["REMNAWAVE_URL"].rstrip("/")
 RW_TOKEN = os.environ["REMNAWAVE_TOKEN"]
+RW_API_KEY = os.getenv("REMNAWAVE_API_KEY") or os.getenv("CADDY_AUTH_API_TOKEN")
 SUB_PATH = os.getenv("SUBSCRIPTION_PATH", "sub").strip("/")
 CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))
 # Публичная страница подписки для браузера, напр. https://link.nnnvpn.com
@@ -71,6 +72,17 @@ def username_from_token(token: str) -> Optional[str]:
     return decoded_str.split(",")[0]
 
 
+def rw_api_headers(**extra: str) -> dict[str, str]:
+    headers = {
+        "Authorization": f"Bearer {RW_TOKEN}",
+        "Accept": "application/json",
+    }
+    if RW_API_KEY:
+        headers["X-Api-Key"] = RW_API_KEY
+    headers.update(extra)
+    return headers
+
+
 def is_browser_request(request: Request) -> bool:
     """Браузер запрашивает text/html; VPN-клиенты — нет."""
     accept = (request.headers.get("accept") or "").lower()
@@ -88,7 +100,7 @@ def short_uuid_for(username: str) -> Optional[str]:
     try:
         r = requests.get(
             f"{RW_URL}/api/users/by-username/{username}",
-            headers={"Authorization": f"Bearer {RW_TOKEN}", "Accept": "application/json"},
+            headers=rw_api_headers(),
             timeout=15,
         )
     except requests.RequestException:
@@ -131,6 +143,8 @@ def proxy_to_remnawave(short: str, suffix: str, request: Request) -> Response:
         lh = h.lower()
         if lh.startswith("x-hwid") or lh.startswith("x-device") or lh in ("hwid", "x-ver-os", "x-os-version"):
             fwd[h] = v
+    if RW_API_KEY:
+        fwd["X-Api-Key"] = RW_API_KEY
     params = dict(request.query_params)
     try:
         r = requests.get(url, headers=fwd, params=params, timeout=20)

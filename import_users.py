@@ -363,7 +363,7 @@ def run(args) -> int:
     rw = Remnawave(
         base_url=env("REMNAWAVE_URL", required=True),
         token=env("REMNAWAVE_TOKEN", required=True),
-        api_key=os.getenv("REMNAWAVE_API_KEY"),
+        api_key=os.getenv("REMNAWAVE_API_KEY") or os.getenv("CADDY_AUTH_API_TOKEN"),
     )
 
     st = Stats()
