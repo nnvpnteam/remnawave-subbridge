@@ -119,6 +119,7 @@ def short_uuid_for(username: str) -> Optional[str]:
 
 
 PASS_REQ_HEADERS = ("user-agent", "accept", "accept-language")
+# Стандартные заголовки подписки + Happ (routing, provider-id и т.д.)
 PASS_RESP_HEADERS = (
     "content-type",
     "content-disposition",
@@ -129,6 +130,29 @@ PASS_RESP_HEADERS = (
     "profile-web-page-url",
     "announce",
     "announce-url",
+    "routing",
+    "routing-enable",
+    "provider-id",
+    "x-provider-id",
+    "hide-settings",
+    "tun-mode",
+    "new-domain",
+    "new-url",
+    "encrypted",
+)
+HOP_BY_HOP_RESP = frozenset(
+    {
+        "connection",
+        "transfer-encoding",
+        "content-encoding",
+        "content-length",
+        "keep-alive",
+        "proxy-authenticate",
+        "proxy-authorization",
+        "te",
+        "trailers",
+        "upgrade",
+    }
 )
 
 
@@ -151,9 +175,12 @@ def proxy_to_remnawave(short: str, suffix: str, request: Request) -> Response:
     except requests.RequestException:
         raise HTTPException(status_code=502, detail="Remnawave unreachable")
     out_headers = {}
-    for h in PASS_RESP_HEADERS:
-        if h in r.headers:
-            out_headers[h] = r.headers[h]
+    for h, v in r.headers.items():
+        lh = h.lower()
+        if lh in HOP_BY_HOP_RESP:
+            continue
+        if lh in PASS_RESP_HEADERS or lh.startswith("x-"):
+            out_headers[h] = v
     media = r.headers.get("content-type", "text/plain")
     return Response(content=r.content, status_code=r.status_code, headers=out_headers, media_type=media)
 
